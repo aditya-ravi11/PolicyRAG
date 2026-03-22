@@ -14,6 +14,8 @@ Question: {query}
 
 Provide a comprehensive answer citing specific chunks using [N] notation."""
 
+VANILLA_RAG_SYSTEM_PROMPT = """You are a helpful assistant. Answer questions based on the provided context."""
+
 VANILLA_RAG_PROMPT = """Answer the following question based on the provided context.
 
 Context:

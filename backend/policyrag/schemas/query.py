@@ -46,10 +46,18 @@ class QueryResponse(BaseModel):
     query_id: str
     query: str
     answer: str
+    abstained: bool = False
     citations: list[Citation]
     source_chunks: list[SourceChunk]
     evaluation: EvaluationScores
+    evaluation_status: str = "completed"
     metadata: QueryMetadata
+
+
+class EvaluationPollResponse(BaseModel):
+    status: str
+    evaluation: Optional[EvaluationScores] = None
+    latency_evaluation_ms: Optional[float] = None
 
 
 class VanillaResponse(BaseModel):

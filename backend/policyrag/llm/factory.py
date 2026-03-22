@@ -1,14 +1,21 @@
+import contextvars
 from typing import Optional
 
 from policyrag.config import settings
 from policyrag.llm.base import BaseLLMProvider
 from policyrag.llm.openai_provider import OpenAIProvider
 
+# Thread-safe per-request active provider/model using contextvars
+_active_provider_var: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
+    "_active_provider", default=None
+)
+_active_model_var: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
+    "_active_model", default=None
+)
+
 
 class LLMFactory:
     _registry: dict[str, type] = {}
-    _active_provider: Optional[str] = None
-    _active_model: Optional[str] = None
 
     @classmethod
     def register(cls, name: str, provider_class: type) -> None:
@@ -16,8 +23,8 @@ class LLMFactory:
 
     @classmethod
     def create(cls, provider: Optional[str] = None, model: Optional[str] = None, **kwargs) -> BaseLLMProvider:
-        provider = provider or cls._active_provider or settings.DEFAULT_LLM_PROVIDER
-        model = model or cls._active_model or settings.DEFAULT_LLM_MODEL
+        provider = provider or _active_provider_var.get() or settings.DEFAULT_LLM_PROVIDER
+        model = model or _active_model_var.get() or settings.DEFAULT_LLM_MODEL
 
         if provider == "openai":
             api_key = kwargs.get("api_key") or settings.OPENAI_API_KEY
@@ -46,14 +53,14 @@ class LLMFactory:
 
     @classmethod
     def set_active(cls, provider: str, model: str) -> None:
-        cls._active_provider = provider
-        cls._active_model = model
+        _active_provider_var.set(provider)
+        _active_model_var.set(model)
 
     @classmethod
     def get_active(cls) -> tuple[str, str]:
         return (
-            cls._active_provider or settings.DEFAULT_LLM_PROVIDER,
-            cls._active_model or settings.DEFAULT_LLM_MODEL,
+            _active_provider_var.get() or settings.DEFAULT_LLM_PROVIDER,
+            _active_model_var.get() or settings.DEFAULT_LLM_MODEL,
         )
 
     @classmethod

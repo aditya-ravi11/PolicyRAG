@@ -23,14 +23,14 @@ const EvalDashboard: React.FC<EvalDashboardProps> = ({
 }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-4xl max-h-[85vh] bg-slate-900 border border-slate-700 rounded-xl shadow-2xl flex flex-col overflow-hidden">
+      <div className="w-full max-w-4xl max-h-[85vh] bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/50 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-surface-200 dark:border-surface-700/50 shrink-0">
           <div>
-            <h2 className="text-lg font-semibold text-slate-100">
+            <h2 className="text-lg font-semibold text-surface-900 dark:text-surface-100">
               Evaluation Dashboard
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-surface-500 mt-0.5">
               Quality metrics and provider comparison
             </p>
           </div>
@@ -52,7 +52,7 @@ const EvalDashboard: React.FC<EvalDashboardProps> = ({
             </button>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-lg hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors"
+              className="w-8 h-8 rounded-lg hover:bg-surface-200 dark:hover:bg-surface-800 flex items-center justify-center text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-200 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -65,21 +65,21 @@ const EvalDashboard: React.FC<EvalDashboardProps> = ({
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {isLoading && !analytics ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-brand-500/30 border-t-brand-500 rounded-full animate-spin" />
             </div>
           ) : (
             <>
               {/* Summary Cards */}
               {analytics && (
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-200 mb-3">
+                  <h3 className="text-sm font-semibold text-surface-800 dark:text-surface-200 mb-3">
                     Overall Metrics
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                     <StatCard
                       label="Total Queries"
                       value={String(analytics.total_queries || 0)}
-                      color="text-blue-400"
+                      color="text-brand-500 dark:text-brand-400"
                     />
                     <StatCard
                       label="Avg Trust Score"
@@ -124,14 +124,14 @@ const EvalDashboard: React.FC<EvalDashboardProps> = ({
               {/* Recent Evaluations Table */}
               {history.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-200 mb-3">
+                  <h3 className="text-sm font-semibold text-surface-800 dark:text-surface-200 mb-3">
                     Recent Evaluations
                   </h3>
                   <div className="card overflow-hidden">
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs">
                         <thead>
-                          <tr className="border-b border-slate-700/50 text-slate-400">
+                          <tr className="border-b border-surface-200 dark:border-surface-700/50 text-surface-500 dark:text-surface-400">
                             <th className="text-left px-4 py-2.5 font-medium">Query</th>
                             <th className="text-left px-3 py-2.5 font-medium">Provider</th>
                             <th className="text-center px-3 py-2.5 font-medium">Faith.</th>
@@ -145,12 +145,12 @@ const EvalDashboard: React.FC<EvalDashboardProps> = ({
                           {history.slice(0, 20).map((entry) => (
                             <tr
                               key={entry.id}
-                              className="border-b border-slate-800/50 hover:bg-slate-800/20"
+                              className="border-b border-surface-200 dark:border-surface-800/50 hover:bg-surface-100 dark:hover:bg-surface-800/20"
                             >
-                              <td className="px-4 py-2.5 text-slate-300 max-w-[200px] truncate">
+                              <td className="px-4 py-2.5 text-surface-600 dark:text-surface-300 max-w-[200px] truncate">
                                 {entry.query_text}
                               </td>
-                              <td className="px-3 py-2.5 text-slate-400 font-mono">
+                              <td className="px-3 py-2.5 text-surface-500 dark:text-surface-400 font-mono">
                                 {entry.provider}
                               </td>
                               <td className={`px-3 py-2.5 text-center font-mono ${scoreColor(entry.faithfulness_score)}`}>
@@ -165,7 +165,7 @@ const EvalDashboard: React.FC<EvalDashboardProps> = ({
                               <td className={`px-3 py-2.5 text-center font-mono ${scoreColor(entry.overall_trust_score)}`}>
                                 {formatScore(entry.overall_trust_score)}
                               </td>
-                              <td className="px-4 py-2.5 text-right text-slate-500">
+                              <td className="px-4 py-2.5 text-right text-surface-500">
                                 {formatDate(entry.created_at)}
                               </td>
                             </tr>
@@ -180,10 +180,10 @@ const EvalDashboard: React.FC<EvalDashboardProps> = ({
               {/* Empty state */}
               {!analytics && history.length === 0 && (
                 <div className="text-center py-12">
-                  <svg className="w-16 h-16 text-slate-700 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-16 h-16 text-surface-300 dark:text-surface-700 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-surface-500">
                     No evaluation data yet. Start asking questions to build evaluation history.
                   </p>
                 </div>
@@ -208,7 +208,7 @@ function StatCard({
 }) {
   return (
     <div className="card p-3">
-      <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">
+      <div className="text-[10px] text-surface-500 uppercase tracking-wider mb-1">
         {label}
       </div>
       <div className={`text-xl font-bold font-mono ${color}`}>{value}</div>

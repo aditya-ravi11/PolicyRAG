@@ -20,6 +20,7 @@ def chunk_text(
     company: Optional[str] = None,
     filing_type: Optional[str] = None,
     filing_date: Optional[str] = None,
+    user_id: Optional[str] = None,
 ) -> list[Chunk]:
     """Split text into chunks with metadata."""
     splitter = RecursiveCharacterTextSplitter(
@@ -43,5 +44,7 @@ def chunk_text(
             metadata["filing_type"] = filing_type
         if filing_date:
             metadata["filing_date"] = filing_date
+        if user_id:
+            metadata["user_id"] = user_id
         chunks.append(Chunk(text=t, metadata=metadata))
     return chunks

@@ -3,7 +3,7 @@
  * Green for scores > 0.7, amber for > 0.4, red otherwise.
  */
 export function scoreColor(score: number | undefined | null): string {
-  if (score === undefined || score === null) return 'text-slate-500';
+  if (score === undefined || score === null) return 'text-surface-500';
   if (score > 0.7) return 'text-emerald-400';
   if (score > 0.4) return 'text-amber-400';
   return 'text-red-400';
@@ -13,7 +13,7 @@ export function scoreColor(score: number | undefined | null): string {
  * Returns a Tailwind background color class for score bars.
  */
 export function scoreBarColor(score: number | undefined | null): string {
-  if (score === undefined || score === null) return 'bg-slate-600';
+  if (score === undefined || score === null) return 'bg-surface-600';
   if (score > 0.7) return 'bg-emerald-500';
   if (score > 0.4) return 'bg-amber-500';
   return 'bg-red-500';
@@ -23,7 +23,7 @@ export function scoreBarColor(score: number | undefined | null): string {
  * Returns a border color for score-based highlighting.
  */
 export function scoreBorderColor(score: number | undefined | null): string {
-  if (score === undefined || score === null) return 'border-slate-600';
+  if (score === undefined || score === null) return 'border-surface-600';
   if (score > 0.7) return 'border-emerald-500/30';
   if (score > 0.4) return 'border-amber-500/30';
   return 'border-red-500/30';

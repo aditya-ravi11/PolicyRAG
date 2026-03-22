@@ -6,6 +6,8 @@ from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPExcepti
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from policyrag.api.deps import get_cache, get_db
+from policyrag.auth.jwt_verifier import get_current_user
+from policyrag.auth.storage import delete_from_storage, upload_to_storage
 from policyrag.cache.redis_cache import QueryCache
 from policyrag.db.repositories.document_repo import DocumentRepository
 from policyrag.ingestion.edgar_client import download_filing
@@ -23,6 +25,7 @@ async def _run_ingestion(
     filing_type: Optional[str],
     filing_date: Optional[str],
     db_url: str,
+    user_id: Optional[str] = None,
 ):
     """Background task for PDF ingestion."""
     from policyrag.db.session import async_session_factory
@@ -34,18 +37,19 @@ async def _run_ingestion(
             company=company,
             filing_type=filing_type,
             filing_date=filing_date,
+            user_id=user_id,
         )
         async with async_session_factory() as session:
             repo = DocumentRepository(session)
             await repo.update_status(uuid.UUID(doc_id), "READY", chunk_count)
     except Exception as e:
-        logger.error(f"Ingestion failed for {doc_id}: {e}")
+        logger.error(f"Ingestion failed for {doc_id}: {e}", exc_info=True)
         try:
             async with async_session_factory() as session:
                 repo = DocumentRepository(session)
                 await repo.update_status(uuid.UUID(doc_id), "FAILED")
-        except Exception:
-            pass
+        except Exception as db_err:
+            logger.error(f"Failed to update status to FAILED for {doc_id}: {db_err}")
 
 
 @router.post("", response_model=DocumentResponse, summary="Upload PDF document", description="Upload a PDF filing for ingestion. The file is processed asynchronously.")
@@ -57,15 +61,25 @@ async def upload_document(
     filing_date: Optional[str] = Form(None),
     ticker: Optional[str] = Form(None),
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
 
     content = await file.read()
+
+    # PDF size limit: 50 MB
+    max_size = 50 * 1024 * 1024
+    if len(content) > max_size:
+        raise HTTPException(
+            status_code=413,
+            detail=f"PDF too large ({len(content) / (1024*1024):.1f} MB). Maximum size is 50 MB.",
+        )
     file_hash = compute_file_hash(content)
+    user_id = user["user_id"]
 
     repo = DocumentRepository(db)
-    existing = await repo.get_by_hash(file_hash)
+    existing = await repo.get_by_hash(file_hash, user_id=user_id)
     if existing:
         return DocumentResponse(
             id=str(existing.id),
@@ -89,6 +103,7 @@ async def upload_document(
 
     doc = await repo.create(
         filename=file.filename,
+        user_id=user_id,
         company=company,
         filing_type=filing_type,
         filing_date=fd,
@@ -96,10 +111,17 @@ async def upload_document(
         file_hash=file_hash,
     )
 
+    # Upload to Supabase Storage
+    try:
+        upload_to_storage(user_id, str(doc.id), file.filename, content)
+    except Exception as e:
+        logger.warning(f"Storage upload failed (non-critical): {e}")
+
     from policyrag.config import settings
     background_tasks.add_task(
         _run_ingestion,
         str(doc.id), content, company, filing_type, filing_date, settings.DATABASE_URL,
+        user_id=user_id,
     )
 
     return DocumentResponse(
@@ -120,6 +142,7 @@ async def fetch_edgar(
     request: EdgarRequest,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     try:
         filings = await download_filing(
@@ -131,6 +154,7 @@ async def fetch_edgar(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+    user_id = user["user_id"]
     results = []
     repo = DocumentRepository(db)
     for filing in filings:
@@ -138,7 +162,7 @@ async def fetch_edgar(
         content = filing["content"]
         file_hash = compute_file_hash(content)
 
-        existing = await repo.get_by_hash(file_hash)
+        existing = await repo.get_by_hash(file_hash, user_id=user_id)
         if existing:
             results.append(DocumentResponse(
                 id=str(existing.id),
@@ -162,6 +186,7 @@ async def fetch_edgar(
 
         doc = await repo.create(
             filename=filing["filename"],
+            user_id=user_id,
             company=meta.get("ticker", request.ticker).upper(),
             filing_type=meta.get("filing_type", request.filing_type),
             filing_date=fd,
@@ -175,6 +200,7 @@ async def fetch_edgar(
             _run_ingestion,
             str(doc.id), content, doc.company, doc.filing_type,
             meta.get("filing_date"), "unused",
+            user_id=user_id,
         )
         results.append(DocumentResponse(
             id=str(doc.id),
@@ -195,9 +221,10 @@ async def fetch_edgar(
 async def list_documents(
     status: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     repo = DocumentRepository(db)
-    docs = await repo.list_all(status=status)
+    docs = await repo.list_all(user_id=user["user_id"], status=status)
     return [
         DocumentResponse(
             id=str(d.id), filename=d.filename, company=d.company,
@@ -209,9 +236,13 @@ async def list_documents(
 
 
 @router.get("/{doc_id}", response_model=DocumentResponse, summary="Get document", description="Retrieve a single document by its ID.")
-async def get_document(doc_id: str, db: AsyncSession = Depends(get_db)):
+async def get_document(
+    doc_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
     repo = DocumentRepository(db)
-    doc = await repo.get_by_id(uuid.UUID(doc_id))
+    doc = await repo.get_by_id(uuid.UUID(doc_id), user_id=user["user_id"])
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
     return DocumentResponse(
@@ -226,21 +257,40 @@ async def delete_document(
     doc_id: str,
     db: AsyncSession = Depends(get_db),
     cache: QueryCache = Depends(get_cache),
+    user: dict = Depends(get_current_user),
 ):
+    user_id = user["user_id"]
     repo = DocumentRepository(db)
-    doc = await repo.get_by_id(uuid.UUID(doc_id))
+    doc = await repo.get_by_id(uuid.UUID(doc_id), user_id=user_id)
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
 
+    # Delete from Supabase Storage
+    storage_path = f"{user_id}/{doc_id}/{doc.filename}"
+    try:
+        delete_from_storage(storage_path)
+    except Exception as e:
+        logger.warning(f"Storage delete failed (non-critical): {e}")
+
     delete_document_chunks(doc_id)
-    await repo.delete(uuid.UUID(doc_id))
+    await repo.delete(uuid.UUID(doc_id), user_id=user_id)
     await cache.invalidate_for_document(doc_id)
 
     return {"status": "deleted"}
 
 
 @router.get("/{doc_id}/chunks", summary="Get document chunks", description="Retrieve all text chunks for a document from the vector store.")
-async def get_document_chunks(doc_id: str):
+async def get_document_chunks(
+    doc_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
+    # Verify ownership
+    repo = DocumentRepository(db)
+    doc = await repo.get_by_id(uuid.UUID(doc_id), user_id=user["user_id"])
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
     from policyrag.ingestion.pipeline import get_collection
     collection = get_collection()
     results = collection.get(where={"doc_id": doc_id}, include=["documents", "metadatas"])

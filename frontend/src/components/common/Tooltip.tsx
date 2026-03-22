@@ -29,7 +29,7 @@ const Tooltip: React.FC<TooltipProps> = ({
       {children}
       {visible && (
         <div
-          className={`absolute z-50 px-2.5 py-1.5 text-xs font-medium text-slate-100 bg-slate-700 border border-slate-600 rounded-lg shadow-lg whitespace-nowrap pointer-events-none ${positionClasses[position]}`}
+          className={`absolute z-50 px-2.5 py-1.5 text-xs font-medium text-surface-900 dark:text-surface-100 bg-surface-100 dark:bg-surface-700 border border-surface-200 dark:border-surface-600 rounded-lg shadow-lg whitespace-nowrap pointer-events-none ${positionClasses[position]}`}
         >
           {content}
         </div>

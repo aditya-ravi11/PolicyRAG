@@ -14,6 +14,7 @@ class Document(Base):
     __tablename__ = "documents"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     filename: Mapped[str] = mapped_column(String(500), nullable=False)
     company: Mapped[str | None] = mapped_column(String(300))
     filing_type: Mapped[str | None] = mapped_column(String(50))
@@ -32,6 +33,7 @@ class EvaluationHistory(Base):
     __tablename__ = "evaluation_history"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     query_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     query_text: Mapped[str] = mapped_column(Text, nullable=False)
     answer_text: Mapped[str] = mapped_column(Text, nullable=False)

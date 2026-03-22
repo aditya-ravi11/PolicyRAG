@@ -16,7 +16,7 @@ const CitedAnswer: React.FC<CitedAnswerProps> = ({ text }) => {
   };
 
   return (
-    <div className="text-sm text-slate-200 leading-relaxed prose prose-invert prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:text-slate-200 prose-strong:text-slate-100">
+    <div className="text-sm text-surface-800 dark:text-surface-200 leading-relaxed prose prose-invert prose-sm max-w-none prose-p:my-1.5 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:text-surface-800 dark:prose-headings:text-surface-200 prose-strong:text-surface-900 dark:prose-strong:text-surface-100">
       {segments.map((segment, i) => {
         if (segment.type === 'citation' && segment.citationIndex !== undefined) {
           return (

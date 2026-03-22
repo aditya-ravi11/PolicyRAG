@@ -18,8 +18,8 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
 }) => {
   return (
     <div
-      className={`group px-3 py-2.5 border-b border-slate-800/50 hover:bg-slate-800/30 cursor-pointer transition-colors ${
-        isSelected ? 'bg-blue-500/5 border-l-2 border-l-blue-500' : 'border-l-2 border-l-transparent'
+      className={`group px-3 py-2.5 border-b border-surface-200 dark:border-surface-800/50 hover:bg-surface-100 dark:hover:bg-surface-800/30 cursor-pointer transition-colors ${
+        isSelected ? 'bg-brand-500/5 border-l-2 border-l-brand-500' : 'border-l-2 border-l-transparent'
       }`}
       onClick={onToggle}
     >
@@ -27,7 +27,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
         <div className="min-w-0 flex-1">
           {/* Company / Filename */}
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-medium text-slate-200 truncate">
+            <span className="text-sm font-medium text-surface-800 dark:text-surface-200 truncate">
               {document.company || document.filename}
             </span>
           </div>
@@ -35,21 +35,21 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
           {/* Metadata row */}
           <div className="flex items-center gap-2 flex-wrap">
             {document.ticker && (
-              <span className="text-[10px] font-mono text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">
+              <span className="text-[10px] font-mono text-brand-500 dark:text-brand-400 bg-brand-500/10 px-1.5 py-0.5 rounded">
                 {document.ticker}
               </span>
             )}
             {document.filing_type && (
-              <span className="text-[10px] text-slate-500 uppercase">
+              <span className="text-[10px] text-surface-500 uppercase">
                 {document.filing_type}
               </span>
             )}
             {document.filing_date && (
-              <span className="text-[10px] text-slate-500">
+              <span className="text-[10px] text-surface-500">
                 {formatDate(document.filing_date)}
               </span>
             )}
-            <span className="text-[10px] text-slate-600">
+            <span className="text-[10px] text-surface-400 dark:text-surface-600">
               {document.chunk_count} chunks
             </span>
           </div>
@@ -62,7 +62,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
               e.stopPropagation();
               onDelete();
             }}
-            className="w-6 h-6 rounded-md opacity-0 group-hover:opacity-100 hover:bg-red-500/20 flex items-center justify-center text-slate-500 hover:text-red-400 transition-all"
+            className="w-6 h-6 rounded-md opacity-0 group-hover:opacity-100 hover:bg-red-500/20 flex items-center justify-center text-surface-500 hover:text-red-400 transition-all"
             title="Delete document"
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -71,6 +71,13 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Processing progress bar */}
+      {(document.status === 'PROCESSING' || document.status === 'processing') && (
+        <div className="mt-2 w-full h-1 bg-surface-200 dark:bg-surface-700/50 rounded-full overflow-hidden">
+          <div className="h-full bg-amber-400 rounded-full animate-pulse" style={{ width: '60%' }} />
+        </div>
+      )}
     </div>
   );
 };

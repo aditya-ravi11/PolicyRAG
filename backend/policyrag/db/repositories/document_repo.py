@@ -15,6 +15,7 @@ class DocumentRepository:
     async def create(
         self,
         filename: str,
+        user_id: str,
         company: Optional[str] = None,
         filing_type: Optional[str] = None,
         filing_date: Optional[date] = None,
@@ -24,6 +25,7 @@ class DocumentRepository:
         file_hash: Optional[str] = None,
     ) -> Document:
         doc = Document(
+            user_id=user_id,
             filename=filename,
             company=company,
             filing_type=filing_type,
@@ -39,12 +41,15 @@ class DocumentRepository:
         await self.session.refresh(doc)
         return doc
 
-    async def get_by_id(self, doc_id: uuid.UUID) -> Optional[Document]:
-        result = await self.session.execute(select(Document).where(Document.id == doc_id))
+    async def get_by_id(self, doc_id: uuid.UUID, user_id: Optional[str] = None) -> Optional[Document]:
+        stmt = select(Document).where(Document.id == doc_id)
+        if user_id:
+            stmt = stmt.where(Document.user_id == user_id)
+        result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def list_all(self, status: Optional[str] = None) -> list[Document]:
-        stmt = select(Document).order_by(Document.created_at.desc())
+    async def list_all(self, user_id: str, status: Optional[str] = None) -> list[Document]:
+        stmt = select(Document).where(Document.user_id == user_id).order_by(Document.created_at.desc())
         if status:
             stmt = stmt.where(Document.status == status)
         result = await self.session.execute(stmt)
@@ -56,14 +61,17 @@ class DocumentRepository:
         )
         await self.session.commit()
 
-    async def delete(self, doc_id: uuid.UUID) -> bool:
-        doc = await self.get_by_id(doc_id)
+    async def delete(self, doc_id: uuid.UUID, user_id: Optional[str] = None) -> bool:
+        doc = await self.get_by_id(doc_id, user_id=user_id)
         if not doc:
             return False
         await self.session.delete(doc)
         await self.session.commit()
         return True
 
-    async def get_by_hash(self, file_hash: str) -> Optional[Document]:
-        result = await self.session.execute(select(Document).where(Document.file_hash == file_hash))
+    async def get_by_hash(self, file_hash: str, user_id: Optional[str] = None) -> Optional[Document]:
+        stmt = select(Document).where(Document.file_hash == file_hash)
+        if user_id:
+            stmt = stmt.where(Document.user_id == user_id)
+        result = await self.session.execute(stmt)
         return result.scalar_one_or_none()

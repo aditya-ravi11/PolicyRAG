@@ -1,10 +1,21 @@
+import logging
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+
+import nltk
 
 from policyrag.core.retriever import RetrievedChunk
 from policyrag.schemas.citation import Citation, SourceChunk
 
+logger = logging.getLogger(__name__)
+
 CITATION_PATTERN = re.compile(r"\[(\d+)\]")
+
+# Ensure punkt tokenizer is available
+try:
+    nltk.data.find("tokenizers/punkt_tab")
+except LookupError:
+    nltk.download("punkt_tab", quiet=True)
 
 
 @dataclass
@@ -13,6 +24,7 @@ class ExtractionResult:
     source_chunks: list[SourceChunk]
     citation_coverage: float
     uncited_sentences: list[str]
+    invalid_citations: list[int] = field(default_factory=list)
 
 
 def _chunk_to_source(chunk: RetrievedChunk) -> SourceChunk:
@@ -35,10 +47,19 @@ def extract_citations(
     """Parse [N] markers from LLM output and map to source chunks."""
     # Find all citation numbers
     cited_numbers = set()
+    invalid_citations: list[int] = []
     for match in CITATION_PATTERN.finditer(answer):
         num = int(match.group(1))
         if num in source_map:
             cited_numbers.add(num)
+        else:
+            invalid_citations.append(num)
+
+    if invalid_citations:
+        logger.warning(
+            f"Invalid citation references (out of range): {sorted(set(invalid_citations))}",
+            extra={"stage": "citation_extraction", "invalid_citations": sorted(set(invalid_citations))},
+        )
 
     # Build citation objects
     citations = []
@@ -60,10 +81,11 @@ def extract_citations(
             source_chunks.append(_chunk_to_source(chunk))
             seen_chunks.add(chunk.chunk_id)
 
-    # Identify uncited sentences
-    sentences = [s.strip() for s in re.split(r"[.!?]+", answer) if s.strip()]
+    # Identify uncited sentences using nltk sentence tokenizer
+    sentences = nltk.sent_tokenize(answer)
     uncited = []
     for sentence in sentences:
+        sentence = sentence.strip()
         if not CITATION_PATTERN.search(sentence) and len(sentence) > 20:
             uncited.append(sentence)
 
@@ -76,4 +98,5 @@ def extract_citations(
         source_chunks=source_chunks,
         citation_coverage=coverage,
         uncited_sentences=uncited,
+        invalid_citations=sorted(set(invalid_citations)),
     )

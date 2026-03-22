@@ -7,16 +7,37 @@ import {
   fetchEdgar,
 } from '../services/api';
 
+// Toast callback type — set externally by the component that provides toast context
+let _toastCallback: ((msg: string) => void) | null = null;
+export function setDocumentToastCallback(cb: (msg: string) => void) {
+  _toastCallback = cb;
+}
+
 export function useDocuments() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const prevDocsRef = useRef<Document[]>([]);
 
   const refresh = useCallback(async () => {
     try {
       const docs = await getDocuments();
-      setDocuments(Array.isArray(docs) ? docs : []);
+      const newDocs = Array.isArray(docs) ? docs : [];
+
+      // Detect PROCESSING → READY transitions
+      const prev = prevDocsRef.current;
+      for (const doc of newDocs) {
+        if (doc.status === 'READY' || doc.status === 'ready') {
+          const prevDoc = prev.find((d) => d.id === doc.id);
+          if (prevDoc && (prevDoc.status === 'PROCESSING' || prevDoc.status === 'processing')) {
+            _toastCallback?.(`Document ready — ${doc.chunk_count} chunks indexed`);
+          }
+        }
+      }
+
+      prevDocsRef.current = newDocs;
+      setDocuments(newDocs);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to load documents';
       setError(msg);

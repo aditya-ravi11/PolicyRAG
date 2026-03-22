@@ -17,7 +17,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
 }) => {
   if (documents.length === 0) {
     return (
-      <div className="p-4 text-center text-sm text-slate-500">
+      <div className="p-4 text-center text-sm text-surface-500">
         No documents uploaded
       </div>
     );

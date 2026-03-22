@@ -12,12 +12,13 @@ EDGAR_SEARCH_URL = "https://efts.sec.gov/LATEST/search-index"
 EDGAR_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"
 EDGAR_FILING_URL = "https://www.sec.gov/Archives/edgar/data/{cik}/{accession}/{filename}"
 
-HEADERS = {"User-Agent": settings.EDGAR_USER_AGENT, "Accept-Encoding": "gzip, deflate"}
+def _headers() -> dict[str, str]:
+    return {"User-Agent": settings.EDGAR_USER_AGENT, "Accept-Encoding": "gzip, deflate"}
 
 
 async def _get_cik_from_ticker(client: httpx.AsyncClient, ticker: str) -> Optional[str]:
     """Resolve ticker to CIK using SEC company tickers JSON."""
-    resp = await client.get("https://www.sec.gov/files/company_tickers.json", headers=HEADERS)
+    resp = await client.get("https://www.sec.gov/files/company_tickers.json", headers=_headers())
     resp.raise_for_status()
     data = resp.json()
     ticker_upper = ticker.upper()
@@ -36,7 +37,7 @@ async def _get_filings(
 ) -> list[dict]:
     """Get filing metadata from EDGAR submissions API."""
     url = EDGAR_SUBMISSIONS_URL.format(cik=cik)
-    resp = await client.get(url, headers=HEADERS)
+    resp = await client.get(url, headers=_headers())
     resp.raise_for_status()
     data = resp.json()
 
@@ -94,7 +95,7 @@ async def download_filing(
             )
             for attempt in range(3):
                 try:
-                    resp = await client.get(url, headers=HEADERS)
+                    resp = await client.get(url, headers=_headers())
                     if resp.status_code == 429:
                         wait = (attempt + 1) * 2
                         logger.warning(f"EDGAR 429, retrying in {wait}s")

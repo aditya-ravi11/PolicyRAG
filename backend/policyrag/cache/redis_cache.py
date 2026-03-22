@@ -27,15 +27,53 @@ class QueryCache:
         if self._redis:
             await self._redis.close()
 
-    def _make_key(self, query: str, doc_ids: list[str], provider: str, model: str) -> str:
-        raw = json.dumps({"q": query, "docs": sorted(doc_ids), "p": provider, "m": model}, sort_keys=True)
+    def _make_key(
+        self,
+        query: str,
+        doc_ids: list[str],
+        provider: str,
+        model: str,
+        top_k: int = 10,
+        rerank: bool = True,
+        company_filter: Optional[str] = None,
+        section_filter: Optional[str] = None,
+        filing_type_filter: Optional[str] = None,
+    ) -> str:
+        raw = json.dumps(
+            {
+                "q": query,
+                "docs": sorted(doc_ids),
+                "p": provider,
+                "m": model,
+                "top_k": top_k,
+                "rerank": rerank,
+                "company": company_filter,
+                "section": section_filter,
+                "filing_type": filing_type_filter,
+            },
+            sort_keys=True,
+        )
         return f"policyrag:query:{hashlib.sha256(raw.encode()).hexdigest()}"
 
-    async def get(self, query: str, doc_ids: list[str], provider: str, model: str) -> Optional[dict]:
+    async def get(
+        self,
+        query: str,
+        doc_ids: list[str],
+        provider: str,
+        model: str,
+        top_k: int = 10,
+        rerank: bool = True,
+        company_filter: Optional[str] = None,
+        section_filter: Optional[str] = None,
+        filing_type_filter: Optional[str] = None,
+    ) -> Optional[dict]:
         if not self._redis:
             return None
         try:
-            key = self._make_key(query, doc_ids, provider, model)
+            key = self._make_key(
+                query, doc_ids, provider, model,
+                top_k, rerank, company_filter, section_filter, filing_type_filter,
+            )
             data = await self._redis.get(key)
             if data:
                 return json.loads(data)
@@ -43,11 +81,26 @@ class QueryCache:
             logger.warning(f"Cache get error: {e}")
         return None
 
-    async def set(self, query: str, doc_ids: list[str], provider: str, model: str, response: dict) -> None:
+    async def set(
+        self,
+        query: str,
+        doc_ids: list[str],
+        provider: str,
+        model: str,
+        response: dict,
+        top_k: int = 10,
+        rerank: bool = True,
+        company_filter: Optional[str] = None,
+        section_filter: Optional[str] = None,
+        filing_type_filter: Optional[str] = None,
+    ) -> None:
         if not self._redis:
             return
         try:
-            key = self._make_key(query, doc_ids, provider, model)
+            key = self._make_key(
+                query, doc_ids, provider, model,
+                top_k, rerank, company_filter, section_filter, filing_type_filter,
+            )
             await self._redis.set(key, json.dumps(response), ex=settings.CACHE_TTL_SECONDS)
         except Exception as e:
             logger.warning(f"Cache set error: {e}")

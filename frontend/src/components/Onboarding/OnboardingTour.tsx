@@ -23,13 +23,18 @@ const STEPS: Step[] = [
     title: 'Ask Questions',
   },
   {
-    target: '[data-tour="source-panel"]',
-    content: 'After each answer, cited source chunks appear here with faithfulness indicators and relevance scores.',
-    title: 'Source Citations',
+    target: '[data-tour="compare-toggle"]',
+    content: 'Toggle Compare Mode to see PolicyRAG vs Vanilla RAG side-by-side with the same retrieval context.',
+    title: 'Compare Mode',
+  },
+  {
+    target: '[data-tour="chat-messages"]',
+    content: 'Every answer includes a trust evaluation with color-coded confidence. Cited source chunks appear in the right panel.',
+    title: 'Trust Scores & Citations',
   },
   {
     target: '[data-tour="eval-button"]',
-    content: 'Open the evaluation dashboard to see aggregate trust scores across all your queries.',
+    content: 'Open the evaluation dashboard to see aggregate trust scores, provider comparisons, and query history.',
     title: 'Evaluation Dashboard',
   },
 ];
@@ -52,10 +57,10 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ onFinish }) => {
       callback={handleCallback}
       styles={{
         options: {
-          backgroundColor: '#1e293b',
-          textColor: '#e2e8f0',
-          primaryColor: '#2563eb',
-          arrowColor: '#1e293b',
+          backgroundColor: '#292524',
+          textColor: '#e7e5e4',
+          primaryColor: '#0d9488',
+          arrowColor: '#292524',
           overlayColor: 'rgba(0, 0, 0, 0.7)',
           zIndex: 10000,
         },
@@ -72,17 +77,17 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ onFinish }) => {
           lineHeight: '1.5',
         },
         buttonNext: {
-          backgroundColor: '#2563eb',
+          backgroundColor: '#0d9488',
           borderRadius: '8px',
           fontSize: '13px',
           padding: '8px 16px',
         },
         buttonBack: {
-          color: '#94a3b8',
+          color: '#a8a29e',
           fontSize: '13px',
         },
         buttonSkip: {
-          color: '#64748b',
+          color: '#78716c',
           fontSize: '13px',
         },
       }}

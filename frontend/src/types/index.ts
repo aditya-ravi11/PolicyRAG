@@ -38,10 +38,18 @@ export interface QueryResponse {
   query_id: string;
   query: string;
   answer: string;
+  abstained?: boolean;
   citations: Citation[];
   source_chunks: SourceChunk[];
   evaluation: EvaluationScores;
+  evaluation_status?: 'pending' | 'completed';
   metadata: QueryMetadata;
+}
+
+export interface EvaluationPollResponse {
+  status: 'pending' | 'completed';
+  evaluation?: EvaluationScores;
+  latency_evaluation_ms?: number;
 }
 
 export interface QueryRequest {

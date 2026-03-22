@@ -7,10 +7,11 @@ import ChatContainer from '../components/Chat/ChatContainer';
 import EvalDashboard from '../components/Evaluation/EvalDashboard';
 import OnboardingTour from '../components/Onboarding/OnboardingTour';
 import { useQuery } from '../hooks/useQuery';
-import { useDocuments } from '../hooks/useDocuments';
+import { useDocuments, setDocumentToastCallback } from '../hooks/useDocuments';
 import { useModels } from '../hooks/useModels';
 import { useEvaluation } from '../hooks/useEvaluation';
 import { useCompare } from '../hooks/useCompare';
+import { useToast } from '../contexts/ToastContext';
 import type { Citation, SourceChunk } from '../types';
 
 const ChatPage: React.FC = () => {
@@ -21,6 +22,7 @@ const ChatPage: React.FC = () => {
   const {
     messages,
     isLoading: isQuerying,
+    error: queryError,
     activeResponse,
     sendQuery,
     clearMessages,
@@ -57,7 +59,16 @@ const ChatPage: React.FC = () => {
     compareResult,
     isComparing,
     sendCompareQuery,
+    clearCompare,
   } = useCompare();
+
+  const { addToast } = useToast();
+
+  // Wire toast for document processing transitions
+  useEffect(() => {
+    setDocumentToastCallback((msg: string) => addToast({ message: msg, type: 'success' }));
+    return () => setDocumentToastCallback(() => {});
+  }, [addToast]);
 
   // Local UI state
   const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
@@ -101,13 +112,19 @@ const ChatPage: React.FC = () => {
     [sendQuery, sendCompareQuery, compareMode, activeProvider, activeModel]
   );
 
+  // Clear chat — clears both messages and compare result
+  const handleClearChat = useCallback(() => {
+    clearMessages();
+    clearCompare();
+  }, [clearMessages, clearCompare]);
+
   // Extract citations and source chunks from the active response
   const citations: Citation[] = activeResponse?.citations || [];
   const sourceChunks: SourceChunk[] = activeResponse?.source_chunks || [];
   const hasSourceData = citations.length > 0 || sourceChunks.length > 0;
 
   return (
-    <div className="h-screen flex flex-col bg-slate-900 text-slate-100 overflow-hidden">
+    <div className="h-screen flex flex-col bg-surface-50 dark:bg-surface-950 text-surface-900 dark:text-surface-100 overflow-hidden">
       {/* Top Header */}
       <Header
         models={models}
@@ -140,10 +157,11 @@ const ChatPage: React.FC = () => {
         <ChatContainer
           messages={messages}
           isLoading={isQuerying || isComparing}
+          error={queryError}
           onSendQuery={handleSendQuery}
           documents={documents}
           selectedDocIds={selectedDocIds}
-          onClearChat={clearMessages}
+          onClearChat={handleClearChat}
           compareMode={compareMode}
           onToggleCompare={() => setCompareMode(!compareMode)}
           compareResult={compareResult}

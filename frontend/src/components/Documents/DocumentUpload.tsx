@@ -86,13 +86,13 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
+      <div className="w-full max-w-md bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-xl shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700/50">
-          <h3 className="text-base font-semibold text-slate-100">Add Document</h3>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-surface-200 dark:border-surface-700/50">
+          <h3 className="text-base font-semibold text-surface-900 dark:text-surface-100">Add Document</h3>
           <button
             onClick={onClose}
-            className="w-7 h-7 rounded-md hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors"
+            className="w-7 h-7 rounded-md hover:bg-surface-200 dark:hover:bg-surface-800 flex items-center justify-center text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-200 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -101,13 +101,13 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-700/50">
+        <div className="flex border-b border-surface-200 dark:border-surface-700/50">
           <button
             onClick={() => { setActiveTab('upload'); setError(null); }}
             className={`flex-1 px-4 py-2.5 text-sm font-medium transition-colors ${
               activeTab === 'upload'
-                ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'text-brand-500 dark:text-brand-400 border-b-2 border-brand-500 dark:border-brand-400'
+                : 'text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-200'
             }`}
           >
             PDF Upload
@@ -116,8 +116,8 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
             onClick={() => { setActiveTab('edgar'); setError(null); }}
             className={`flex-1 px-4 py-2.5 text-sm font-medium transition-colors ${
               activeTab === 'edgar'
-                ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'text-brand-500 dark:text-brand-400 border-b-2 border-brand-500 dark:border-brand-400'
+                : 'text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-200'
             }`}
           >
             EDGAR Fetch
@@ -137,8 +137,8 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                 onClick={() => fileInputRef.current?.click()}
                 className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
                   dragActive
-                    ? 'border-blue-500 bg-blue-500/5'
-                    : 'border-slate-600 hover:border-slate-500 hover:bg-slate-800/30'
+                    ? 'border-brand-500 bg-brand-500/5'
+                    : 'border-surface-300 dark:border-surface-600 hover:border-surface-400 dark:hover:border-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800/30'
                 }`}
               >
                 <input
@@ -148,24 +148,24 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                   onChange={handleFileSelect}
                   className="hidden"
                 />
-                <svg className="w-10 h-10 text-slate-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-10 h-10 text-surface-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
                 {selectedFile ? (
                   <div>
-                    <p className="text-sm font-medium text-slate-200">
+                    <p className="text-sm font-medium text-surface-800 dark:text-surface-200">
                       {selectedFile.name}
                     </p>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-xs text-surface-500 mt-1">
                       {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                     </p>
                   </div>
                 ) : (
                   <div>
-                    <p className="text-sm text-slate-300">
+                    <p className="text-sm text-surface-600 dark:text-surface-300">
                       Drop a PDF here or click to browse
                     </p>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-xs text-surface-500 mt-1">
                       SEC filings, annual reports, prospectuses
                     </p>
                   </div>
@@ -192,7 +192,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
           ) : (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                <label className="block text-xs font-medium text-surface-500 dark:text-surface-400 mb-1.5">
                   Ticker Symbol
                 </label>
                 <input
@@ -205,7 +205,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                <label className="block text-xs font-medium text-surface-500 dark:text-surface-400 mb-1.5">
                   Filing Type
                 </label>
                 <select

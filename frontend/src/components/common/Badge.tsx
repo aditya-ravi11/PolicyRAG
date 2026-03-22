@@ -12,14 +12,14 @@ const statusStyles: Record<string, string> = {
   processing: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
   FAILED: 'bg-red-500/15 text-red-400 border-red-500/30',
   failed: 'bg-red-500/15 text-red-400 border-red-500/30',
-  PENDING: 'bg-slate-500/15 text-slate-400 border-slate-500/30',
-  pending: 'bg-slate-500/15 text-slate-400 border-slate-500/30',
+  PENDING: 'bg-surface-500/15 text-surface-400 border-surface-500/30',
+  pending: 'bg-surface-500/15 text-surface-400 border-surface-500/30',
 };
 
 const Badge: React.FC<BadgeProps> = ({ status, className = '' }) => {
   const style =
     statusStyles[status] ||
-    'bg-slate-500/15 text-slate-400 border-slate-500/30';
+    'bg-surface-500/15 text-surface-400 border-surface-500/30';
 
   return (
     <span

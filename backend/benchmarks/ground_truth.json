@@ -1,0 +1,66 @@
+[
+  {
+    "id": "gt-001",
+    "query": "What are the main risk factors disclosed in Apple's 10-K?",
+    "expected_topics": ["macroeconomic conditions", "competition", "supply chain", "regulatory", "foreign exchange"],
+    "requires_citation": true,
+    "min_faithfulness": 0.7,
+    "category": "risk_factors"
+  },
+  {
+    "id": "gt-002",
+    "query": "What was the total revenue reported?",
+    "expected_topics": ["revenue", "net sales", "fiscal year"],
+    "requires_citation": true,
+    "min_faithfulness": 0.8,
+    "category": "financials"
+  },
+  {
+    "id": "gt-003",
+    "query": "How does the company describe its competitive landscape?",
+    "expected_topics": ["competition", "market", "competitors", "industry"],
+    "requires_citation": true,
+    "min_faithfulness": 0.7,
+    "category": "business_overview"
+  },
+  {
+    "id": "gt-004",
+    "query": "What are the company's main products and services?",
+    "expected_topics": ["products", "services", "segments", "offerings"],
+    "requires_citation": true,
+    "min_faithfulness": 0.7,
+    "category": "business_overview"
+  },
+  {
+    "id": "gt-005",
+    "query": "Summarize management's discussion of financial condition and results of operations.",
+    "expected_topics": ["revenue", "operating income", "expenses", "growth", "year-over-year"],
+    "requires_citation": true,
+    "min_faithfulness": 0.6,
+    "category": "md_and_a"
+  },
+  {
+    "id": "gt-006",
+    "query": "What legal proceedings or litigation risks are mentioned?",
+    "expected_topics": ["litigation", "legal", "proceedings", "lawsuit", "regulatory"],
+    "requires_citation": true,
+    "min_faithfulness": 0.7,
+    "category": "legal"
+  },
+  {
+    "id": "gt-007",
+    "query": "What is the company's approach to research and development?",
+    "expected_topics": ["research", "development", "R&D", "innovation", "investment"],
+    "requires_citation": true,
+    "min_faithfulness": 0.7,
+    "category": "business_overview"
+  },
+  {
+    "id": "gt-008",
+    "query": "Describe the company's employee and workforce information.",
+    "expected_topics": ["employees", "headcount", "workforce", "human capital"],
+    "requires_citation": true,
+    "min_faithfulness": 0.7,
+    "category": "human_capital"
+  }
+]

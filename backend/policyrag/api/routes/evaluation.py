@@ -1,10 +1,11 @@
 import uuid
 from typing import Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from policyrag.api.deps import get_db
+from policyrag.auth.jwt_verifier import get_current_user
 from policyrag.db.repositories.evaluation_repo import EvaluationRepository
 from policyrag.schemas.evaluation import AnalyticsResponse, EvalHistoryResponse
 
@@ -17,9 +18,10 @@ async def get_history(
     offset: int = 0,
     provider: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     repo = EvaluationRepository(db)
-    records = await repo.list_history(limit=limit, offset=offset, provider=provider)
+    records = await repo.list_history(limit=limit, offset=offset, provider=provider, user_id=user["user_id"])
     return [
         EvalHistoryResponse(
             id=str(r.id), query_id=str(r.query_id), query_text=r.query_text,
@@ -38,11 +40,14 @@ async def get_history(
 
 
 @router.get("/query/{query_id}", response_model=EvalHistoryResponse, summary="Get evaluation by query", description="Retrieve the evaluation result for a specific query ID.")
-async def get_by_query(query_id: str, db: AsyncSession = Depends(get_db)):
+async def get_by_query(
+    query_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
     repo = EvaluationRepository(db)
-    r = await repo.get_by_query_id(uuid.UUID(query_id))
+    r = await repo.get_by_query_id(uuid.UUID(query_id), user_id=user["user_id"])
     if not r:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Evaluation not found")
     return EvalHistoryResponse(
         id=str(r.id), query_id=str(r.query_id), query_text=r.query_text,
@@ -62,12 +67,16 @@ async def get_by_query(query_id: str, db: AsyncSession = Depends(get_db)):
 async def get_analytics(
     provider: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     repo = EvaluationRepository(db)
-    return await repo.get_analytics(provider=provider)
+    return await repo.get_analytics(provider=provider, user_id=user["user_id"])
 
 
 @router.get("/compare", summary="Compare providers", description="Compare evaluation metrics between OpenAI and Ollama providers.")
-async def compare_providers(db: AsyncSession = Depends(get_db)):
+async def compare_providers(
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
     repo = EvaluationRepository(db)
-    return await repo.compare_providers()
+    return await repo.compare_providers(user_id=user["user_id"])

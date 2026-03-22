@@ -28,26 +28,42 @@ class FaithfulnessResult:
     claim_verdicts: list[bool]
 
 
-def _check_entailment_sync(claims: list[str], context_texts: list[str]) -> list[bool]:
-    """Check if each claim is entailed by any context chunk using NLI."""
+def _check_entailment_per_chunk(claims: list[str], context_texts: list[str]) -> list[bool]:
+    """Check if each claim is entailed by ANY individual context chunk (max entailment).
+
+    For each claim, we check it against every chunk independently and take the max.
+    This prevents long-context dilution where concatenating all chunks causes NLI to miss evidence.
+    """
     nli = _get_nli_model()
-    verdicts = []
-    combined_context = " ".join(context_texts)
+    if not claims or not context_texts:
+        return [False] * len(claims)
 
-    pairs = [(combined_context, claim) for claim in claims]
+    # Build all (chunk, claim) pairs for batch prediction
+    pairs = []
+    pair_index_map: list[tuple[int, int]] = []  # (claim_idx, chunk_idx)
+    for ci, claim in enumerate(claims):
+        for chi, chunk_text in enumerate(context_texts):
+            pairs.append((chunk_text, claim))
+            pair_index_map.append((ci, chi))
+
     if not pairs:
-        return []
+        return [False] * len(claims)
 
-    # NLI labels: 0=contradiction, 1=neutral, 2=entailment
+    # Batch NLI inference
     scores = nli.predict(pairs)
-    for score_set in scores:
-        if hasattr(score_set, "__len__"):
-            verdict = int(score_set.argmax()) == 2  # entailment
-        else:
-            verdict = float(score_set) > 0.5
-        verdicts.append(verdict)
 
-    return verdicts
+    # For each claim, check if ANY chunk entails it
+    claim_entailed = [False] * len(claims)
+    for i, score_set in enumerate(scores):
+        ci, _ = pair_index_map[i]
+        if hasattr(score_set, "__len__"):
+            is_entailed = int(score_set.argmax()) == 2  # entailment label
+        else:
+            is_entailed = float(score_set) > 0.5
+        if is_entailed:
+            claim_entailed[ci] = True
+
+    return claim_entailed
 
 
 async def evaluate_faithfulness(
@@ -55,7 +71,7 @@ async def evaluate_faithfulness(
     context_chunks: list[RetrievedChunk],
     llm: BaseLLMProvider,
 ) -> FaithfulnessResult:
-    """Two-step faithfulness: decompose claims, then NLI check each."""
+    """Two-step faithfulness: decompose claims, then NLI check each against individual chunks."""
     # Step 1: Decompose answer into claims
     prompt = CLAIM_DECOMPOSITION_PROMPT.format(answer=answer)
     response = await llm.generate(prompt)
@@ -71,10 +87,10 @@ async def evaluate_faithfulness(
     if not claims:
         return FaithfulnessResult(score=1.0, num_claims=0, num_faithful=0, claims=[], claim_verdicts=[])
 
-    # Step 2: NLI check
+    # Step 2: Per-chunk NLI check (max entailment across chunks)
     context_texts = [c.text for c in context_chunks]
     loop = asyncio.get_event_loop()
-    verdicts = await loop.run_in_executor(None, _check_entailment_sync, claims, context_texts)
+    verdicts = await loop.run_in_executor(None, _check_entailment_per_chunk, claims, context_texts)
 
     num_faithful = sum(verdicts)
     score = num_faithful / len(claims) if claims else 1.0

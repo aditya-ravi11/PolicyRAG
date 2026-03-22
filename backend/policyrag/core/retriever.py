@@ -8,6 +8,7 @@ from typing import Optional
 from sentence_transformers import CrossEncoder
 
 from policyrag.config import settings
+from policyrag.core.query_expander import expand_query
 from policyrag.ingestion.embedder import embed_query
 from policyrag.ingestion.pipeline import get_collection
 
@@ -46,20 +47,33 @@ async def retrieve(
     section_filter: Optional[str] = None,
     filing_type_filter: Optional[str] = None,
     document_ids: Optional[list[str]] = None,
+    user_id: Optional[str] = None,
 ) -> list[RetrievedChunk]:
     """Retrieve relevant chunks from ChromaDB with optional re-ranking."""
-    query_embedding = await embed_query(query)
+    # Expand query with financial synonyms for better recall
+    expanded_query = expand_query(query)
 
-    # Build metadata filter
-    where = {}
+    # Embed the expanded query for semantic search
+    query_embedding = await embed_query(expanded_query)
+
+    # Build metadata filter — ChromaDB requires $and for multiple conditions
+    conditions = []
+    if user_id:
+        conditions.append({"user_id": user_id})
     if company_filter:
-        where["company"] = company_filter
+        conditions.append({"company": company_filter})
     if section_filter:
-        where["section"] = section_filter
+        conditions.append({"section": section_filter})
     if filing_type_filter:
-        where["filing_type"] = filing_type_filter
+        conditions.append({"filing_type": filing_type_filter})
     if document_ids:
-        where["doc_id"] = {"$in": document_ids}
+        conditions.append({"doc_id": {"$in": document_ids}})
+
+    where = {}
+    if len(conditions) == 1:
+        where = conditions[0]
+    elif len(conditions) > 1:
+        where = {"$and": conditions}
 
     collection = get_collection()
     n_results = top_k * 3 if rerank else top_k
@@ -85,7 +99,14 @@ async def retrieve(
                 )
             )
 
+    # Filter by embedding similarity BEFORE reranking
+    min_score = settings.MIN_RETRIEVAL_SCORE
+    chunks = [c for c in chunks if c.score >= min_score]
+
     if rerank and chunks:
+        # Rerank using the ORIGINAL query (not expanded) for precision.
+        # Cross-encoder scores are used for relative ordering only — the
+        # absolute threshold was already applied to embedding scores above.
         loop = asyncio.get_event_loop()
         chunks = await loop.run_in_executor(None, _rerank_sync, query, chunks, top_k)
     else:

@@ -9,7 +9,7 @@ interface ModelComparisonProps {
 const ModelComparison: React.FC<ModelComparisonProps> = ({ comparison }) => {
   if (!comparison?.providers || comparison.providers.length === 0) {
     return (
-      <div className="card p-4 text-center text-sm text-slate-500">
+      <div className="card p-4 text-center text-sm text-surface-500">
         No comparison data available. Run queries with different providers to compare.
       </div>
     );
@@ -17,7 +17,7 @@ const ModelComparison: React.FC<ModelComparisonProps> = ({ comparison }) => {
 
   return (
     <div>
-      <h3 className="text-sm font-semibold text-slate-200 mb-4">
+      <h3 className="text-sm font-semibold text-surface-800 dark:text-surface-200 mb-4">
         Provider Comparison
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -26,16 +26,16 @@ const ModelComparison: React.FC<ModelComparisonProps> = ({ comparison }) => {
             {/* Provider header */}
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h4 className="text-sm font-semibold text-slate-200">
+                <h4 className="text-sm font-semibold text-surface-800 dark:text-surface-200">
                   {provider.provider}
                 </h4>
-                <p className="text-xs text-slate-500 font-mono">{provider.model}</p>
+                <p className="text-xs text-surface-500 font-mono">{provider.model}</p>
               </div>
               <div className="text-right">
-                <div className="text-lg font-bold font-mono text-blue-400">
+                <div className="text-lg font-bold font-mono text-brand-500 dark:text-brand-400">
                   {Math.round((provider.avg_trust_score || 0) * 100)}%
                 </div>
-                <p className="text-[10px] text-slate-500">Trust Score</p>
+                <p className="text-[10px] text-surface-500">Trust Score</p>
               </div>
             </div>
 
@@ -51,7 +51,7 @@ const ModelComparison: React.FC<ModelComparisonProps> = ({ comparison }) => {
             />
 
             {/* Query count */}
-            <div className="mt-3 pt-3 border-t border-slate-700/30 text-[10px] text-slate-500">
+            <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700/30 text-[10px] text-surface-500">
               Based on {provider.query_count} queries
             </div>
           </div>

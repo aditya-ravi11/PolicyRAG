@@ -47,16 +47,16 @@ const SourcePanel: React.FC<SourcePanelProps> = ({ citations, sourceChunks }) =>
 
   if (items.length === 0) {
     return (
-      <div className="w-[350px] bg-slate-900 border-l border-slate-700/50 flex flex-col shrink-0">
+      <div className="w-[350px] bg-white dark:bg-surface-900 border-l border-surface-200 dark:border-surface-700/50 flex flex-col shrink-0">
         <div className="panel-header">
-          <h2 className="text-sm font-semibold text-slate-200">Sources</h2>
+          <h2 className="text-sm font-semibold text-surface-800 dark:text-surface-200">Sources</h2>
         </div>
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="text-center">
-            <svg className="w-12 h-12 text-slate-700 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-12 h-12 text-surface-300 dark:text-surface-700 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-surface-500">
               Ask a question to see source citations here.
             </p>
           </div>
@@ -66,10 +66,10 @@ const SourcePanel: React.FC<SourcePanelProps> = ({ citations, sourceChunks }) =>
   }
 
   return (
-    <div className="w-[350px] bg-slate-900 border-l border-slate-700/50 flex flex-col shrink-0 overflow-hidden" data-tour="source-panel">
+    <div className="w-[350px] bg-white dark:bg-surface-900 border-l border-surface-200 dark:border-surface-700/50 flex flex-col shrink-0 overflow-hidden" data-tour="source-panel">
       <div className="panel-header">
-        <h2 className="text-sm font-semibold text-slate-200">Sources</h2>
-        <span className="text-xs text-slate-500 font-mono">{items.length} cited</span>
+        <h2 className="text-sm font-semibold text-surface-800 dark:text-surface-200">Sources</h2>
+        <span className="text-xs text-surface-500 font-mono">{items.length} cited</span>
       </div>
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {items.map((item) => (
@@ -78,8 +78,8 @@ const SourcePanel: React.FC<SourcePanelProps> = ({ citations, sourceChunks }) =>
             ref={(el) => { chunkRefs.current[item.index] = el; }}
             className={`p-3 rounded-lg border transition-all duration-300 ${
               highlightedIndex === item.index
-                ? 'bg-blue-500/10 border-blue-500/40 ring-1 ring-blue-500/20'
-                : 'bg-slate-800/50 border-slate-700/50 hover:border-slate-600/50'
+                ? 'bg-brand-500/10 border-brand-500/40 ring-1 ring-brand-500/20'
+                : 'bg-surface-100 dark:bg-surface-800/50 border-surface-200 dark:border-surface-700/50 hover:border-surface-300 dark:hover:border-surface-600/50'
             }`}
           >
             {/* Header */}
@@ -87,7 +87,7 @@ const SourcePanel: React.FC<SourcePanelProps> = ({ citations, sourceChunks }) =>
               <div className="flex items-center gap-2">
                 <span className="citation-badge text-[10px]">{item.index}</span>
                 {item.chunk.section && (
-                  <span className="text-xs text-slate-400 truncate max-w-[180px]">
+                  <span className="text-xs text-surface-500 dark:text-surface-400 truncate max-w-[180px]">
                     {item.chunk.section}
                   </span>
                 )}
@@ -102,12 +102,12 @@ const SourcePanel: React.FC<SourcePanelProps> = ({ citations, sourceChunks }) =>
             </div>
 
             {/* Text */}
-            <p className="text-xs text-slate-300 leading-relaxed line-clamp-4 mb-2">
+            <p className="text-xs text-surface-600 dark:text-surface-300 leading-relaxed line-clamp-4 mb-2">
               {item.chunk.text}
             </p>
 
             {/* Metadata footer */}
-            <div className="flex items-center gap-3 text-[10px] text-slate-500">
+            <div className="flex items-center gap-3 text-[10px] text-surface-500">
               {item.chunk.company && (
                 <span>{item.chunk.company}</span>
               )}
@@ -123,12 +123,12 @@ const SourcePanel: React.FC<SourcePanelProps> = ({ citations, sourceChunks }) =>
             {item.chunk.relevance_score !== undefined && (
               <div className="mt-2">
                 <div className="flex items-center justify-between mb-0.5">
-                  <span className="text-[10px] text-slate-500">Relevance</span>
-                  <span className="text-[10px] font-mono text-slate-400">
+                  <span className="text-[10px] text-surface-500">Relevance</span>
+                  <span className="text-[10px] font-mono text-surface-500 dark:text-surface-400">
                     {formatScore(item.chunk.relevance_score)}
                   </span>
                 </div>
-                <div className="w-full h-1 bg-slate-700/50 rounded-full overflow-hidden">
+                <div className="w-full h-1 bg-surface-200 dark:bg-surface-700/50 rounded-full overflow-hidden">
                   <div
                     className={`h-1 rounded-full transition-all duration-500 ${scoreBarColor(item.chunk.relevance_score)}`}
                     style={{ width: `${Math.round(item.chunk.relevance_score * 100)}%` }}

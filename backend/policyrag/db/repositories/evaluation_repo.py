@@ -18,20 +18,23 @@ class EvaluationRepository:
         await self.session.refresh(record)
         return record
 
-    async def get_by_query_id(self, query_id: uuid.UUID) -> Optional[EvaluationHistory]:
-        result = await self.session.execute(
-            select(EvaluationHistory).where(EvaluationHistory.query_id == query_id)
-        )
+    async def get_by_query_id(self, query_id: uuid.UUID, user_id: Optional[str] = None) -> Optional[EvaluationHistory]:
+        stmt = select(EvaluationHistory).where(EvaluationHistory.query_id == query_id)
+        if user_id:
+            stmt = stmt.where(EvaluationHistory.user_id == user_id)
+        result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def list_history(self, limit: int = 50, offset: int = 0, provider: Optional[str] = None) -> list[EvaluationHistory]:
+    async def list_history(self, limit: int = 50, offset: int = 0, provider: Optional[str] = None, user_id: Optional[str] = None) -> list[EvaluationHistory]:
         stmt = select(EvaluationHistory).order_by(EvaluationHistory.created_at.desc()).limit(limit).offset(offset)
         if provider:
             stmt = stmt.where(EvaluationHistory.provider == provider)
+        if user_id:
+            stmt = stmt.where(EvaluationHistory.user_id == user_id)
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
-    async def get_analytics(self, provider: Optional[str] = None) -> dict:
+    async def get_analytics(self, provider: Optional[str] = None, user_id: Optional[str] = None) -> dict:
         stmt = select(
             func.count(EvaluationHistory.id).label("total_queries"),
             func.avg(EvaluationHistory.faithfulness_score).label("avg_faithfulness"),
@@ -44,6 +47,8 @@ class EvaluationRepository:
         )
         if provider:
             stmt = stmt.where(EvaluationHistory.provider == provider)
+        if user_id:
+            stmt = stmt.where(EvaluationHistory.user_id == user_id)
         result = await self.session.execute(stmt)
         row = result.one()
         return {
@@ -57,8 +62,8 @@ class EvaluationRepository:
             "avg_completeness": round(float(row.avg_completeness or 0), 3),
         }
 
-    async def compare_providers(self) -> dict:
+    async def compare_providers(self, user_id: Optional[str] = None) -> dict:
         providers = {}
         for provider in ["openai", "ollama"]:
-            providers[provider] = await self.get_analytics(provider=provider)
+            providers[provider] = await self.get_analytics(provider=provider, user_id=user_id)
         return providers

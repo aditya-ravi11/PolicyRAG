@@ -30,6 +30,10 @@ export function useCompare() {
     []
   );
 
+  const clearCompare = useCallback(() => {
+    setCompareResult(null);
+  }, []);
+
   return {
     compareMode,
     setCompareMode,
@@ -37,5 +41,6 @@ export function useCompare() {
     isComparing,
     error,
     sendCompareQuery,
+    clearCompare,
   };
 }
