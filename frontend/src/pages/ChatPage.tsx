@@ -58,6 +58,7 @@ const ChatPage: React.FC = () => {
     setCompareMode,
     compareResult,
     isComparing,
+    error: compareError,
     sendCompareQuery,
     clearCompare,
   } = useCompare();
@@ -157,7 +158,7 @@ const ChatPage: React.FC = () => {
         <ChatContainer
           messages={messages}
           isLoading={isQuerying || isComparing}
-          error={queryError}
+          error={compareMode ? compareError : queryError}
           onSendQuery={handleSendQuery}
           documents={documents}
           selectedDocIds={selectedDocIds}

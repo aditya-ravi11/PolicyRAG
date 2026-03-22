@@ -32,6 +32,7 @@ export function useCompare() {
 
   const clearCompare = useCallback(() => {
     setCompareResult(null);
+    setError(null);
   }, []);
 
   return {
